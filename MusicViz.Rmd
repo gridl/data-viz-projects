@@ -1,0 +1,57 @@
+---
+title: "Musical visualization"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+    theme: journal
+    highlight: zenburn
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Loading the libraries
+
+```{r, message=FALSE}
+library(tidyverse)
+library(here)
+library(tuneR)
+```
+
+# Getting the data
+I found that [Kunst der Furge](http://www.kunstderfuge.com/bach/chamber.htm#Cello) has a number of MIDIS for classical music including some of J.S Bach (my all times favourite). So I did not hesitate to jump and analyse this data when I realized it was available.
+
+
+```{r}
+if (!file.exists(here('data','bach.mid')))
+  download.file('http://www.kunstderfuge.com/-/midi.asp?file=bach/suite_for_unaccompanied_cello_bwv-1007_1_(c)grossman.mid', here('data', 'bach.mid'))
+```
+
+MIDI files contain each note to be played for a song and should contain all information I need for the viz. 
+
+The `tuneR` package allows you to read a MIDI file and get a nice data frame in return. The package even gives individual `track`s with names, meaning that you can figure out which instrument plays each note.
+
+So the first thig to do is to load the whole MIDI in a single data frame.
+
+```{r}
+songs <-readMidi('./data/bach.mid')
+
+head(songs)
+```
+
+This can be easily splitted into individual tracks and notes
+
+```{r}
+tracks <- songs %>%
+  filter(event == 'Sequence/Track Name') %>%
+  transmute(track, track_name = parameterMetaSystem)
+
+notes <- getMidiNotes(songs) %>%
+  inner_join(tracks, by = 'track') %>%
+  arrange(time) %>%
+  head(50)
+```
+
