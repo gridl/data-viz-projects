@@ -1,0 +1,201 @@
+---
+title: "Corruption and human development"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+    theme: journal
+    highlight: zenburn
+    self_contained: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(here)
+library(tidyverse)
+library(ggplot2)
+```
+
+
+# Initial play with the data
+Loading the data 
+```{r}
+housing <- read.csv(here('data', 'landdata-states.csv'))
+head(housing)
+```
+
+Creating a histogram
+
+```{r}
+hist(housing$Home.Value)
+```
+```{r}
+ggplot(housing, aes(x = Home.Value)) +
+  geom_histogram()
+```
+
+ Base colored scatter plot
+```{r}
+plot(Home.Value ~ Date,
+     data=subset(housing, State == "MA"))
+points(Home.Value ~ Date, col="purple",
+       data=subset(housing, State == "TX"))
+legend(1975, 400000,
+       c("MA", "TX"), title="State",
+       col=c("black", "purple"),
+       pch=c(1, 1))
+```
+ 
+ Using ggplot
+ 
+```{r}
+ggplot(subset(housing, State %in% c("MA", "TX")),
+       aes(x=Date,
+           y=Home.Value,
+           color=State))+
+  geom_point()
+```
+
+## Scatter plots
+
+```{r}
+hp2001Q1 <- subset(housing, Date == 2001.25) 
+ggplot(hp2001Q1, aes(y = Structure.Cost, x = log(Land.Value))) +
+  geom_point()
+```
+
+Adding prediction line
+
+
+```{r}
+hp2001Q1$pred.SC <- predict(lm(Structure.Cost ~ log(Land.Value), data = hp2001Q1))
+
+plt <- ggplot(hp2001Q1, aes(x = log(Land.Value), y = Structure.Cost))
+
+plt + geom_point(aes(color = Home.Value)) +
+  geom_line(aes(y = pred.SC))
+```
+
+Adding labels to the points
+
+```{r}
+plt <- ggplot(hp2001Q1, aes(x = log(Land.Value), y = Structure.Cost))
+
+plt + geom_text(aes(label=State), size = 3)
+```
+
+## Aesthetic Mapping VS Assignment
+Note that variables are mapped to aesthetics with the aes() function, while fixed aesthetics are set outside the aes() call. 
+
+## Mapping variables to other aesthetics
+```{r}
+plt + geom_point(aes(color = Home.Value, shape = region))
+```
+
+### Statistical transformations
+
+```{r}
+housing.sum <- aggregate(housing["Home.Value"], housing["State"], FUN = mean)
+
+ggplot(housing, aes(x = State, y = Home.Value)) +
+  geom_bar(stat = 'identity')
+```
+
+# Scales
+
+## Scales: Controlling aesthetics mapping
+
+Aesthetic mapping (i.e., with `aes()`) only says that a variable should be mapped to an aesthetic. It doesn’t say how that should happen. For example, when mapping a variable to shape with `aes(shape = x)` you don’t say what shapes should be used. Similarly, `aes(color = z)` doesn’t say what colors should be used. Describing what colors/shapes/sizes etc. to use is done by modifying the corresponding scale. In ggplot2 scales include
+
+- position
+- color and fill
+- size
+- shape
+- line type
+Scales are modified with a series of functions using a scale_<aesthetic>_<type> naming scheme. Try typing scale_<tab> to see a list of scale modification functions.
+
+# Common Scale Arguments
+The following arguments are common to most scales in ggplot2:
+ 
+- name: the first argument gives the axis or legend title
+- limits: the minimum and maximum of the scale
+- breaks: the points along the scale where labels should appear
+- labels: the labels that appear at each break
+
+Specific scale functions may have additional arguments; for example, the `scale_color_continuous` function has arguments `low` and `high` for setting the colors at the low and high end of the scale.
+
+## Scale Modification Examples
+Start by constructing a dotplot showing the distribution of home values by Date and State.
+
+
+```{r}
+p1 <- ggplot(housing, 
+             aes(x = State, y = Home.Price.Index)) +
+  theme(legend.position = "top",
+        axis.text = element_text(size = 6))
+(p2 <- p1 + geom_point(aes(color = Date),
+                       alpha = 0.6, size = 1.5,
+                       position = position_jitter(width = 0.25, height = 0)))
+```
+
+
+Change the breaks for the  x axis and color scales
+
+```{r}
+p2 + scale_x_discrete(name="State Abbreviation") +
+  scale_color_continuous(name="",
+                         breaks = c(1976, 1994, 2013),
+                         labels = c("'76", "'94", "'13"))
+```
+
+Changing the colour schemes
+
+```{r}
+p2 + scale_x_discrete(name="State Abbreviation") +
+  scale_color_continuous(name="",
+                         breaks = c(1976, 1994, 2013),
+                         labels = c("'76", "'94", "'13"),
+                         low = "blue", high = "purple")
+```
+
+```{r}
+library(scales)
+p2 + scale_alpha_continuous(name="",
+                         breaks = c(1976, 1994, 2013),
+                         labels = c("'76", "'94", "'13"),
+                         low = muted("blue"), high = muted("red"))
+```
+
+## Using different color scales
+
+`scale_color_gradient2` will interpolate between three different colors
+
+```{r}
+p4 +
+  scale_color_gradient2(name="",
+                        breaks = c(1976, 1994, 2013),
+                        labels = c("'76", "'94", "'13"),
+                        low = muted("blue"),
+                        high = muted("red"),
+                        mid = "gray60",
+                        midpoint = 1994)
+```
+
+# Faceting
+
+- Faceting is ggplot2 parlance for small multiples
+- The idea is to create separate graphs for subsets of data
+- ggplot2 offers two functions for creating small multiples:
+- `facet_wrap()`: define subsets as the levels of a single grouping variable
+- `facet_grid()`: define subsets as the crossing of two grouping variables
+Facilitates comparison among plots, not just of geoms within a plot
+
+```{r}
+p5<- ggplot(housing, aes(x = Date, y =Home.Value))
+
+p5 + geom_line(aes(color = State))
+```
+
