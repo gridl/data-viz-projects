@@ -1,0 +1,48 @@
+---
+title: "US Household income per state in the U.S"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+    theme: flatly
+    highlight: zenburn
+    self_contained : true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Loading the packages
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(here)
+library(geojsonio)
+library(broom)
+library(rgeos)
+```
+
+# The data
+This is a makeover of  [Visualizing Household Income Distribution in the U.S. by State](http://www.visualcapitalist.com/household-income-distribution-u-s-state/)
+
+<div style="clear:both"><a href="http://www.visualcapitalist.com/household-income-distribution-u-s-state/"><img src="http://2oqz471sa19h3vbwa53m33yj.wpengine.netdna-cdn.com/wp-content/uploads/2017/11/household-income.png" border="0" /></a></div><div>Courtesy of: <a href="http://www.visualcapitalist.com">Visual Capitalist</a></div>
+
+# Creating a map
+First I will read the hexbin in geojson format and 'fortify' it so I can use it with ggplot2 later
+The hexbin in geojson is available [here](https://team.carto.com/u/andrew/tables/andrew.us_states_hexgrid/public/map)
+
+```{r}
+US <- geojson_read(here('data', 'us_states_hexgrid.geojson'),  what = "sp")
+US@data = US@data %>% 
+  mutate(google_name = gsub(" \\(United States\\)", "", google_name))
+
+US_map <- tidy(US, region = "google_name")
+```
+
+We now have ageospatial object!!!! 
+Next will be calculating the centroid of hexagon.
+```{r}
+
+```
+
