@@ -43,6 +43,18 @@ US_map <- tidy(US, region = "google_name")
 We now have ageospatial object!!!! 
 Next will be calculating the centroid of hexagon.
 ```{r}
+centroids <- cbind.data.frame(data.frame(data.frame(gCentroid(US, byid=TRUE),
+                                                    id = US@data$iso3166_2)))
+```
 
+Now we can do a bit of plotting
+
+```{r}
+ggplot() + 
+  geom_polygon(data = US_map, aes(x = long, y = lat, group = group),
+               fill = "slateblue", color = "white") +
+  geom_text(data = centroids, aes(x = x, y = y, label = id)) +
+  theme_minimal() +
+  coord_map()
 ```
 
