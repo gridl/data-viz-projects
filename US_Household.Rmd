@@ -15,12 +15,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Loading the packages
 ```{r}
-library(tidyverse)
-library(ggplot2)
-library(here)
-library(geojsonio)
-library(broom)
-library(rgeos)
+library(tidyverse)  # data manipulation
+library(ggplot2)    # plotting
+library(here)       # data and files location
+library(geojsonio)  # geodata
+library(broom)      # tidy data 
+library(rgeos)      # map related things
 ```
 
 # The data
@@ -56,5 +56,12 @@ ggplot() +
   geom_text(data = centroids, aes(x = x, y = y, label = id)) +
   theme_minimal() +
   coord_map()
+```
+
+My idea is to colour the hexagons according to the income data. So it is basically a [cloropeth map](https://datavizcatalogue.com/methods/choropleth.html).
+
+
+```{r}
+
 ```
 
