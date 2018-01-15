@@ -163,7 +163,7 @@ p2 + scale_x_discrete(name="State Abbreviation") +
 
 ```{r}
 library(scales)
-p2 + scale_alpha_continuous(name="",
+p2 + scale_color_continuous(name="",
                          breaks = c(1976, 1994, 2013),
                          labels = c("'76", "'94", "'13"),
                          low = muted("blue"), high = muted("red"))
@@ -174,8 +174,7 @@ p2 + scale_alpha_continuous(name="",
 `scale_color_gradient2` will interpolate between three different colors
 
 ```{r}
-p4 +
-  scale_color_gradient2(name="",
+p2 + scale_color_gradient2(name="",
                         breaks = c(1976, 1994, 2013),
                         labels = c("'76", "'94", "'13"),
                         low = muted("blue"),
@@ -198,4 +197,22 @@ p5<- ggplot(housing, aes(x = Date, y =Home.Value))
 
 p5 + geom_line(aes(color = State))
 ```
+
+## Faceting
+
+```{r}
+(p5 <- p5 +geom_line(aes(color = State)) +
+  facet_wrap(~State, ncol = 10) +
+   theme(legend.position ="None"))
+```
+
+
+## Themes
+
+```{r}
+p5 + theme_dark() +
+  theme( text =  element_text(color = "turquoise"))
+```
+
+
 
