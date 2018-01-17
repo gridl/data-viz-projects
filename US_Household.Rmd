@@ -21,6 +21,7 @@ library(here)       # data and files location
 library(geojsonio)  # geodata
 library(broom)      # tidy data 
 library(rgeos)      # map related things
+library(readxl)
 ```
 
 # The data
@@ -60,8 +61,37 @@ ggplot() +
 
 My idea is to colour the hexagons according to the income data. So it is basically a [cloropeth map](https://datavizcatalogue.com/methods/choropleth.html).
 
+So now we need to load the data and do a basic exploration before getting to integrate it with the map.
+
+The data can be found [here](https://data.world/makeovermonday/2018-w-3-u-s-household-income-distribution-by-state)
 
 ```{r}
+housing <- read_excel(here('data', 'household_US.xlsx'))
+housing$`Income Level` <- as.factor(housing$`Income Level`)
+head(housing)
+```
 
+Now that we have a fortified map and the housing data set we can start doing some interesting things.
+
+First we'll try and recreate the initial plot and part from there, however when inspecting the ranges for the income it is evident that we have 16 ranges!
+```{r}
+fct_count(housing$`Income Level`)
+```
+
+```{r}
+housing %>% 
+  group_by(Year) %>%
+  summarise(income = mean(`Income Level`)) %>% 
+  print(housing)
+```
+
+
+```{r}
+housing %>%
+  filter(Year == 2009) %>%
+  ggplot(aes(y = `Percent of Total`, x = `State`, fill = `Income Level`)) +
+  geom_bar(stat = 'identity') + 
+  coord_flip() +
+  theme_classic()
 ```
 
