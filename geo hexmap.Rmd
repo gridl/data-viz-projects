@@ -1,0 +1,91 @@
+---
+title: "Maps"
+output: 
+  html_document:
+    toc: true
+    number_sections: true
+    theme: journal
+    highlight: zenburn
+    self_contained: yes
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(viridis)
+library(gridExtra)
+library(geogrid)
+```
+
+Checking London's local authorities
+
+```{r London}
+input_file <- system.file("extdata", "london_LA.json", package = "geogrid")
+original_shapes <- read_polygons(input_file)
+```
+
+Plotting and colour based on area
+
+```{r}
+raw <- read_polygons(input_file)
+raw@data$xcentroid <- sp::coordinates(raw)[,1]
+raw@data$ycentroid <- sp::coordinates(raw)[,2]
+
+clean <- function(shape) {
+  shape@data$id = rownames(shape@data)
+  shape.points = fortify(shape, region="id")
+  shape.df = merge(shape.points, shape@data, by="id")
+}
+
+result_df_raw <- clean(raw)
+rawplot <- ggplot(result_df_raw) +
+  geom_polygon(aes(x = long, y = lat, fill = HECTARES, group = group)) +
+  geom_text(aes(xcentroid, ycentroid, label = substr(NAME, 1, 4)), size = 2,color = "white") +
+  coord_equal() +
+  scale_fill_viridis(option = 'inferno') +
+  guides(fill = FALSE) +
+  theme_void()
+
+rawplot
+```
+
+- Generate grids using `seed`
+The calculate_grid function takes in a SpatialPolygonsDataframe, a learning rate (suggestion = 0.03 to begin), a grid type hexagonal or regular and a seed value. Let's have a look at some hexagonal grid options for the London local authorities:
+
+```{r}
+par(mfrow = c(2, 3), mar = c(0, 0, 2, 0))
+for (i in 1:6) {
+  new_cells <- calculate_grid(shape = original_shapes, grid_type = "hexagonal", seed = i)
+  plot(new_cells, main = paste("Seed", i, sep = " "))
+}
+```
+
+choosing the seed = 3
+```{r}
+new_cells_hex <- calculate_grid(shape = original_shapes, grid_type = "hexagonal", seed = 3)
+resulthex <- assign_polygons(original_shapes, new_cells_hex)
+
+```
+
+Now we can transfer this to the London area 
+
+```{r}
+result_df_hex <- clean(resulthex)
+```
+
+```{r}
+(hexplot <- ggplot(result_df_hex) +
+  geom_polygon(aes(x = long, y = lat, fill = HECTARES, group = group)) +
+  geom_text(aes(V1, V2, label = substr(NAME, 1, 4)), size = 2, color = "white") +
+  scale_fill_viridis(option = 'magma') +
+  coord_equal() +
+  guides(fill = FALSE) +
+  theme_void())
+```
+
